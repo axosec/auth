@@ -7,6 +7,7 @@
 *.dll
 *.so
 *.dylib
+axosec-auth
 
 # Test binary, built with `go test -c`
 *.test
@@ -24,8 +25,9 @@ profile.cov
 go.work
 go.work.sum
 
-# env file
+# env files
 .env
+keys/
 
 # Editor/IDE
 # .idea/
