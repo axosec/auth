@@ -1,0 +1,90 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Swagger definitions for axosec http api",
+        "title": "Axosec Auth API",
+        "contact": {},
+        "version": "0.1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/v1",
+    "paths": {
+        "/auth/register": {
+            "post": {
+                "description": "registers new user",
+                "summary": "Register user",
+                "parameters": [
+                    {
+                        "description": "User payload",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "returns ok if api up",
+                "summary": "Helthcheck",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "auth_verifier",
+                "email",
+                "enc_private_key",
+                "public_key",
+                "salt"
+            ],
+            "properties": {
+                "auth_verifier": {
+                    "type": "array",
+                    "minItems": 32,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "enc_private_key": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "public_key": {
+                    "type": "array",
+                    "minItems": 32,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "salt": {
+                    "type": "array",
+                    "minItems": 32,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        }
+    }
+}

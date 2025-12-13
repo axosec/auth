@@ -7,43 +7,92 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (username, email, password_verifier, encryption_salt)
-VALUES ($1, $2, $3, $4)
-RETURNING id, username, email, password_verifier, encryption_salt, created_at, updated_at
+INSERT INTO users (
+    email,
+    salt,
+    auth_verifier,
+    public_key,
+    enc_private_key
+) VALUES (
+    $1, $2, $3, $4, $5
+)
+RETURNING id, email, salt, auth_verifier, public_key, enc_private_key, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	Username         string
-	Email            string
-	PasswordVerifier string
-	EncryptionSalt   string
+	Email         string
+	Salt          []byte
+	AuthVerifier  []byte
+	PublicKey     []byte
+	EncPrivateKey []byte
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRow(ctx, createUser,
-		arg.Username,
 		arg.Email,
-		arg.PasswordVerifier,
-		arg.EncryptionSalt,
+		arg.Salt,
+		arg.AuthVerifier,
+		arg.PublicKey,
+		arg.EncPrivateKey,
 	)
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
 		&i.Email,
-		&i.PasswordVerifier,
-		&i.EncryptionSalt,
+		&i.Salt,
+		&i.AuthVerifier,
+		&i.PublicKey,
+		&i.EncPrivateKey,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
+const getLoginDetails = `-- name: GetLoginDetails :one
+SELECT id, auth_verifier, enc_private_key, public_key
+FROM users
+WHERE email = $1 LIMIT 1
+`
+
+type GetLoginDetailsRow struct {
+	ID            uuid.UUID
+	AuthVerifier  []byte
+	EncPrivateKey []byte
+	PublicKey     []byte
+}
+
+func (q *Queries) GetLoginDetails(ctx context.Context, email string) (GetLoginDetailsRow, error) {
+	row := q.db.QueryRow(ctx, getLoginDetails, email)
+	var i GetLoginDetailsRow
+	err := row.Scan(
+		&i.ID,
+		&i.AuthVerifier,
+		&i.EncPrivateKey,
+		&i.PublicKey,
+	)
+	return i, err
+}
+
+const getSaltByEmail = `-- name: GetSaltByEmail :one
+SELECT salt FROM users
+WHERE email = $1 LIMIT 1
+`
+
+func (q *Queries) GetSaltByEmail(ctx context.Context, email string) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getSaltByEmail, email)
+	var salt []byte
+	err := row.Scan(&salt)
+	return salt, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, password_verifier, encryption_salt, created_at, updated_at FROM users
+SELECT id, email, salt, auth_verifier, public_key, enc_private_key, created_at, updated_at FROM users
 WHERE email = $1 LIMIT 1
 `
 
@@ -52,10 +101,11 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
 		&i.Email,
-		&i.PasswordVerifier,
-		&i.EncryptionSalt,
+		&i.Salt,
+		&i.AuthVerifier,
+		&i.PublicKey,
+		&i.EncPrivateKey,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

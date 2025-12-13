@@ -1,0 +1,61 @@
+basePath: /v1
+definitions:
+  dto.RegisterRequest:
+    properties:
+      auth_verifier:
+        items:
+          type: integer
+        minItems: 32
+        type: array
+      email:
+        type: string
+      enc_private_key:
+        items:
+          type: integer
+        type: array
+      public_key:
+        items:
+          type: integer
+        minItems: 32
+        type: array
+      salt:
+        items:
+          type: integer
+        minItems: 32
+        type: array
+    required:
+    - auth_verifier
+    - email
+    - enc_private_key
+    - public_key
+    - salt
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Swagger definitions for axosec http api
+  title: Axosec Auth API
+  version: 0.1.0
+paths:
+  /auth/register:
+    post:
+      description: registers new user
+      parameters:
+      - description: User payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      responses:
+        "201":
+          description: Created
+      summary: Register user
+  /health:
+    get:
+      description: returns ok if api up
+      responses:
+        "200":
+          description: OK
+      summary: Helthcheck
+swagger: "2.0"
