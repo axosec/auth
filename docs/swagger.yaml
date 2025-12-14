@@ -1,5 +1,25 @@
 basePath: /v1
 definitions:
+  dto.InitLoginRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  dto.LoginRequest:
+    properties:
+      auth_verifier:
+        items:
+          type: integer
+        minItems: 32
+        type: array
+      email:
+        type: string
+    required:
+    - auth_verifier
+    - email
+    type: object
   dto.RegisterRequest:
     properties:
       auth_verifier:
@@ -37,6 +57,34 @@ info:
   title: Axosec Auth API
   version: 0.1.0
 paths:
+  /auth/login:
+    post:
+      description: logs user in
+      parameters:
+      - description: Login request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      responses:
+        "200":
+          description: OK
+      summary: Login
+  /auth/login/init:
+    post:
+      description: initializes login by obtaining users salt
+      parameters:
+      - description: Login request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.InitLoginRequest'
+      responses:
+        "200":
+          description: OK
+      summary: Init Login
   /auth/register:
     post:
       description: registers new user

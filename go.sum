@@ -6,6 +6,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/axosec/core v0.5.0 h1:Nc/r3SukV+bs/G28Ux6paXhTGjUTodCaPLtMoiveTjw=
 github.com/axosec/core v0.5.0/go.mod h1:GEQYpr6+Ha4B10VfubV1PmxJ9p98Xiu2fofzOQddQQc=
+github.com/axosec/core v0.6.0 h1:ZefMIVrWf0NlZTUAPKd3up3Dg9Yzdtlo1ul/5s4byxs=
+github.com/axosec/core v0.6.0/go.mod h1:GEQYpr6+Ha4B10VfubV1PmxJ9p98Xiu2fofzOQddQQc=
 github.com/bytedance/gopkg v0.1.3 h1:TPBSwH8RsouGCBcMBktLt1AymVo2TVsBVCY4b6TnZ/M=
 github.com/bytedance/gopkg v0.1.3/go.mod h1:576VvJ+eJgyCzdjS+c4+77QF3p7ubbtiKARP3TxducM=
 github.com/bytedance/sonic v1.14.2 h1:k1twIoe97C1DtYUo+fZQy865IuHia4PR5RPiuGPPIIE=

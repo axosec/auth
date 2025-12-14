@@ -14,18 +14,20 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     email,
+    username,
     salt,
     auth_verifier,
     public_key,
     enc_private_key
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6
 )
-RETURNING id, email, salt, auth_verifier, public_key, enc_private_key, created_at, updated_at
+RETURNING id, email, username, salt, auth_verifier, public_key, enc_private_key, created_at, updated_at
 `
 
 type CreateUserParams struct {
 	Email         string
+	Username      string
 	Salt          []byte
 	AuthVerifier  []byte
 	PublicKey     []byte
@@ -35,6 +37,7 @@ type CreateUserParams struct {
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.Email,
+		arg.Username,
 		arg.Salt,
 		arg.AuthVerifier,
 		arg.PublicKey,
@@ -44,6 +47,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.Username,
 		&i.Salt,
 		&i.AuthVerifier,
 		&i.PublicKey,
@@ -92,7 +96,7 @@ func (q *Queries) GetSaltByEmail(ctx context.Context, email string) ([]byte, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, salt, auth_verifier, public_key, enc_private_key, created_at, updated_at FROM users
+SELECT id, email, username, salt, auth_verifier, public_key, enc_private_key, created_at, updated_at FROM users
 WHERE email = $1 LIMIT 1
 `
 
@@ -102,6 +106,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.Username,
 		&i.Salt,
 		&i.AuthVerifier,
 		&i.PublicKey,

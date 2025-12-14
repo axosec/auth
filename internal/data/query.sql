@@ -1,12 +1,13 @@
 -- name: CreateUser :one
 INSERT INTO users (
     email,
+    username,
     salt,
     auth_verifier,
     public_key,
     enc_private_key
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6
 )
 RETURNING *;
 

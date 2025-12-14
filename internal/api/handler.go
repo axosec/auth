@@ -31,6 +31,9 @@ func (h *Handler) RegisterRouters(e *gin.Engine) {
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/register", h.RegisterHandler)
+			auth.POST("/login/init", h.InitLoginHandeler)
+			auth.POST("/login", h.LoginHandeler)
+
 		}
 	}
 }

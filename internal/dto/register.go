@@ -1,7 +1,8 @@
 package dto
 
 type RegisterRequest struct {
-	Email string `json:"email" binding:"required,email"`
+	Email    string `json:"email" binding:"required,email,min=5,max=250"`
+	Username string `json:"username" binding:"required,min=6,max=250"`
 
 	Salt          []byte `json:"salt" binding:"required,min=32"`
 	AuthVerifier  []byte `json:"auth_verifier" binding:"required,min=32"`

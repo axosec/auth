@@ -13,6 +13,7 @@ import (
 type User struct {
 	ID            uuid.UUID
 	Email         string
+	Username      string
 	Salt          []byte
 	AuthVerifier  []byte
 	PublicKey     []byte

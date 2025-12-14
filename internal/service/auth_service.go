@@ -1,13 +1,17 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha512"
 	"errors"
+	"time"
 
 	"github.com/axosec/auth/internal/data/db"
 	"github.com/axosec/auth/internal/dto"
 	"github.com/axosec/core/crypto/token"
+	"github.com/axosec/core/utils"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -24,8 +28,10 @@ func NewAuthService(q *db.Queries, m *token.JWTManager) *AuthService {
 }
 
 var (
-	ErrUserAlreadyExists = errors.New("email already currently in use")
-	ErrInvalidKeyLength  = errors.New("cryptographic keys must be correct length")
+	ErrUserAlreadyExists  = errors.New("email already currently in use")
+	ErrInvalidKeyLength   = errors.New("cryptographic keys must be correct length")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrInvalidCredentials = errors.New("invalid user credentials")
 )
 
 func (s *AuthService) RegisterUser(ctx context.Context, req dto.RegisterRequest) error {
@@ -42,6 +48,7 @@ func (s *AuthService) RegisterUser(ctx context.Context, req dto.RegisterRequest)
 
 	args := db.CreateUserParams{
 		Email:         req.Email,
+		Username:      req.Username,
 		Salt:          req.Salt,
 		AuthVerifier:  verifierSlice,
 		PublicKey:     req.PublicKey,
@@ -60,4 +67,45 @@ func (s *AuthService) RegisterUser(ctx context.Context, req dto.RegisterRequest)
 	}
 
 	return nil
+}
+
+func (s *AuthService) InitLogin(ctx context.Context, req dto.InitLoginRequest) (dto.InitLoginResponse, error) {
+	salt, err := s.q.GetSaltByEmail(ctx, req.Email)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			fakeSalt, saltErr := utils.GenerateSalt(32)
+			if saltErr != nil {
+				return dto.InitLoginResponse{}, saltErr
+			}
+			return dto.InitLoginResponse{Salt: fakeSalt}, nil
+		}
+
+		return dto.InitLoginResponse{}, err
+	}
+
+	return dto.InitLoginResponse{Salt: salt}, nil
+}
+
+func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (string, error) {
+	user, err := s.q.GetLoginDetails(ctx, req.Email)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", ErrUserNotFound
+		}
+
+		return "", err
+	}
+
+	userHash := sha512.Sum512(req.AuthVerifier)
+
+	if !bytes.Equal(userHash[:], user.AuthVerifier) {
+		return "", ErrInvalidCredentials
+	}
+
+	token, err := s.jwt.Issue(user.ID.String(), time.Hour*24)
+	if err != nil {
+		return "", err
+	}
+
+	return token, err
 }
