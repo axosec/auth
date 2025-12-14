@@ -50,3 +50,14 @@ func (h *Handler) LoginHandeler(c *gin.Context) {
 		"message": "User logged in successfully",
 	})
 }
+
+// @Summary      Logout
+// @Description  logs user out
+// @Success      200
+// @Router       /user/logout [post]
+func (h *Handler) LogoutHandler(c *gin.Context) {
+	c.SetCookie("auth_token", "", -1, "/", "", false, true)
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "User logged out in successfully",
+	})
+}

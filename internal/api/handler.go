@@ -2,16 +2,21 @@ package api
 
 import (
 	"github.com/axosec/auth/internal/service"
+	"github.com/axosec/core/crypto/token"
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
+	jwt         *token.JWTManager
 	authService *service.AuthService
+	userService *service.UserService
 }
 
-func NewHandler(authService *service.AuthService) *Handler {
+func NewHandler(jwt *token.JWTManager, authService *service.AuthService, userService *service.UserService) *Handler {
 	return &Handler{
+		jwt:         jwt,
 		authService: authService,
+		userService: userService,
 	}
 }
 
@@ -34,6 +39,11 @@ func (h *Handler) RegisterRouters(e *gin.Engine) {
 			auth.POST("/login/init", h.InitLoginHandeler)
 			auth.POST("/login", h.LoginHandeler)
 
+		}
+		authenticated := v1.Group("")
+		authenticated.Use(h.AuthenticatedMiddleware())
+		{
+			authenticated.GET("/user/self", h.GetSelfHandler)
 		}
 	}
 }

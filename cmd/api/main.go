@@ -65,9 +65,10 @@ Built:  %s
 
 	// Initialize services
 	authService := service.NewAuthService(queries, jwtManager)
+	userService := service.NewUserService(queries)
 
 	// Start http router
-	apiHandler := api.NewHandler(authService)
+	apiHandler := api.NewHandler(jwtManager, authService, userService)
 
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
