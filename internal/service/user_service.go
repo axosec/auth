@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/axosec/auth/internal/data/db"
 	"github.com/axosec/auth/internal/dto"
@@ -22,7 +21,6 @@ func NewUserService(q *db.Queries) *UserService {
 }
 
 func (s *UserService) GetUser(ctx context.Context, id uuid.UUID) (dto.User, error) {
-	fmt.Println(id)
 	user, err := s.q.GetUserById(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

@@ -40,15 +40,13 @@ func (h *Handler) LoginHandeler(c *gin.Context) {
 		return
 	}
 
-	token, err := h.authService.Login(c.Request.Context(), req)
+	user, token, err := h.authService.Login(c.Request.Context(), req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Could not login"})
 		return
 	}
 	c.SetCookie("auth_token", token, 3*24*60*60, "/", "", false, true)
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "User logged in successfully",
-	})
+	c.JSON(http.StatusCreated, user)
 }
 
 // @Summary      Logout

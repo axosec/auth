@@ -86,26 +86,34 @@ func (s *AuthService) InitLogin(ctx context.Context, req dto.InitLoginRequest) (
 	return dto.InitLoginResponse{Salt: salt}, nil
 }
 
-func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (string, error) {
-	user, err := s.q.GetLoginDetails(ctx, req.Email)
+func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (dto.User, string, error) {
+	user, err := s.q.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return "", ErrUserNotFound
+			return dto.User{}, "", ErrUserNotFound
 		}
 
-		return "", err
+		return dto.User{}, "", err
 	}
 
 	userHash := sha512.Sum512(req.AuthVerifier)
 
 	if !bytes.Equal(userHash[:], user.AuthVerifier) {
-		return "", ErrInvalidCredentials
+		return dto.User{}, "", ErrInvalidCredentials
 	}
 
 	token, err := s.jwt.Issue(user.ID.String(), time.Hour*24)
 	if err != nil {
-		return "", err
+		return dto.User{}, "", err
 	}
 
-	return token, err
+	return dto.User{
+		ID: user.ID,
+		Email: user.Email,
+		Username: user.Username,
+		Salt: user.Salt,
+		AuthVerifier: user.AuthVerifier,
+		PublicKey: user.PublicKey,
+		EncPrivateKey: user.EncPrivateKey,
+	}, token, err
 }
