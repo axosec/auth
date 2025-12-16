@@ -44,6 +44,7 @@ func (h *Handler) RegisterRouters(e *gin.Engine) {
 		authenticated.Use(h.AuthenticatedMiddleware())
 		{
 			authenticated.GET("/user/self", h.GetSelfHandler)
+			authenticated.POST("/user/logout", h.LogoutHandler)
 		}
 	}
 }
