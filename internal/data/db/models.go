@@ -11,13 +11,17 @@ import (
 )
 
 type User struct {
-	ID            uuid.UUID
-	Email         string
-	Username      string
-	Salt          []byte
-	AuthVerifier  []byte
-	PublicKey     []byte
-	EncPrivateKey []byte
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID                      uuid.UUID
+	Email                   string
+	Username                string
+	Salt                    []byte
+	AuthVerifier            []byte
+	IdentityPublicKey       []byte
+	EncIdentityPrivateKey   []byte
+	IdentityPrivateKeyNonce []byte
+	VaultPublicKey          []byte
+	EncVaultPrivateKey      []byte
+	VaultPrivateKeyNonce    []byte
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
 }

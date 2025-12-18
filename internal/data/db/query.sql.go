@@ -15,23 +15,36 @@ const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     email,
     username,
+
     salt,
     auth_verifier,
-    public_key,
-    enc_private_key
+
+    identity_public_key,
+    enc_identity_private_key,
+    identity_private_key_nonce,
+
+    vault_public_key,
+    enc_vault_private_key,
+    vault_private_key_nonce
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, 
+    $5, $6, $7, 
+    $8, $9, $10
 )
-RETURNING id, email, username, salt, auth_verifier, public_key, enc_private_key, created_at, updated_at
+RETURNING id, email, username, salt, auth_verifier, identity_public_key, enc_identity_private_key, identity_private_key_nonce, vault_public_key, enc_vault_private_key, vault_private_key_nonce, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	Email         string
-	Username      string
-	Salt          []byte
-	AuthVerifier  []byte
-	PublicKey     []byte
-	EncPrivateKey []byte
+	Email                   string
+	Username                string
+	Salt                    []byte
+	AuthVerifier            []byte
+	IdentityPublicKey       []byte
+	EncIdentityPrivateKey   []byte
+	IdentityPrivateKeyNonce []byte
+	VaultPublicKey          []byte
+	EncVaultPrivateKey      []byte
+	VaultPrivateKeyNonce    []byte
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -40,8 +53,12 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Username,
 		arg.Salt,
 		arg.AuthVerifier,
-		arg.PublicKey,
-		arg.EncPrivateKey,
+		arg.IdentityPublicKey,
+		arg.EncIdentityPrivateKey,
+		arg.IdentityPrivateKeyNonce,
+		arg.VaultPublicKey,
+		arg.EncVaultPrivateKey,
+		arg.VaultPrivateKeyNonce,
 	)
 	var i User
 	err := row.Scan(
@@ -50,35 +67,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Username,
 		&i.Salt,
 		&i.AuthVerifier,
-		&i.PublicKey,
-		&i.EncPrivateKey,
+		&i.IdentityPublicKey,
+		&i.EncIdentityPrivateKey,
+		&i.IdentityPrivateKeyNonce,
+		&i.VaultPublicKey,
+		&i.EncVaultPrivateKey,
+		&i.VaultPrivateKeyNonce,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getLoginDetails = `-- name: GetLoginDetails :one
-SELECT id, auth_verifier, enc_private_key, public_key
-FROM users
-WHERE email = $1 LIMIT 1
-`
-
-type GetLoginDetailsRow struct {
-	ID            uuid.UUID
-	AuthVerifier  []byte
-	EncPrivateKey []byte
-	PublicKey     []byte
-}
-
-func (q *Queries) GetLoginDetails(ctx context.Context, email string) (GetLoginDetailsRow, error) {
-	row := q.db.QueryRow(ctx, getLoginDetails, email)
-	var i GetLoginDetailsRow
-	err := row.Scan(
-		&i.ID,
-		&i.AuthVerifier,
-		&i.EncPrivateKey,
-		&i.PublicKey,
 	)
 	return i, err
 }
@@ -96,7 +92,7 @@ func (q *Queries) GetSaltByEmail(ctx context.Context, email string) ([]byte, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, username, salt, auth_verifier, public_key, enc_private_key, created_at, updated_at FROM users
+SELECT id, email, username, salt, auth_verifier, identity_public_key, enc_identity_private_key, identity_private_key_nonce, vault_public_key, enc_vault_private_key, vault_private_key_nonce, created_at, updated_at FROM users
 WHERE email = $1 LIMIT 1
 `
 
@@ -109,8 +105,12 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Username,
 		&i.Salt,
 		&i.AuthVerifier,
-		&i.PublicKey,
-		&i.EncPrivateKey,
+		&i.IdentityPublicKey,
+		&i.EncIdentityPrivateKey,
+		&i.IdentityPrivateKeyNonce,
+		&i.VaultPublicKey,
+		&i.EncVaultPrivateKey,
+		&i.VaultPrivateKeyNonce,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -118,7 +118,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, email, username, salt, auth_verifier, public_key, enc_private_key, created_at, updated_at FROM users
+SELECT id, email, username, salt, auth_verifier, identity_public_key, enc_identity_private_key, identity_private_key_nonce, vault_public_key, enc_vault_private_key, vault_private_key_nonce, created_at, updated_at FROM users
 WHERE id = $1 LIMIT 1
 `
 
@@ -131,8 +131,12 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Username,
 		&i.Salt,
 		&i.AuthVerifier,
-		&i.PublicKey,
-		&i.EncPrivateKey,
+		&i.IdentityPublicKey,
+		&i.EncIdentityPrivateKey,
+		&i.IdentityPrivateKeyNonce,
+		&i.VaultPublicKey,
+		&i.EncVaultPrivateKey,
+		&i.VaultPrivateKeyNonce,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

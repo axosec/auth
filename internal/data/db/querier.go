@@ -12,7 +12,6 @@ import (
 
 type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	GetLoginDetails(ctx context.Context, email string) (GetLoginDetailsRow, error)
 	GetSaltByEmail(ctx context.Context, email string) ([]byte, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)

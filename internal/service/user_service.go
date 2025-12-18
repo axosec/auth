@@ -31,12 +31,19 @@ func (s *UserService) GetUser(ctx context.Context, id uuid.UUID) (dto.User, erro
 	}
 
 	return dto.User{
-		ID:            user.ID,
-		Email:         user.Email,
-		Username:      user.Username,
-		Salt:          user.Salt,
-		AuthVerifier:  user.AuthVerifier,
-		PublicKey:     user.PublicKey,
-		EncPrivateKey: user.EncPrivateKey,
+		ID:       user.ID,
+		Email:    user.Email,
+		Username: user.Username,
+
+		Salt:         user.Salt,
+		AuthVerifier: user.AuthVerifier,
+
+		IdentityPublicKey:       user.IdentityPublicKey,
+		EncIdentityPrivateKey:   user.EncIdentityPrivateKey,
+		IdentityPrivateKeyNonce: user.IdentityPrivateKeyNonce,
+
+		VaultPublicKey:       user.VaultPublicKey,
+		EncVaultPrivateKey:   user.EncVaultPrivateKey,
+		VaultPrivateKeyNonce: user.VaultPrivateKeyNonce,
 	}, nil
 }

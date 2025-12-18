@@ -28,31 +28,52 @@ func NewAuthService(q *db.Queries, m *token.JWTManager) *AuthService {
 }
 
 var (
-	ErrUserAlreadyExists  = errors.New("email already currently in use")
+	ErrUserAlreadyExists  = errors.New("email already in use")
 	ErrInvalidKeyLength   = errors.New("cryptographic keys must be correct length")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidCredentials = errors.New("invalid user credentials")
 )
 
 func (s *AuthService) RegisterUser(ctx context.Context, req dto.RegisterRequest) error {
-	if len(req.PublicKey) != 32 {
-		return ErrInvalidKeyLength
-	}
-
 	if len(req.Salt) != 32 {
 		return ErrInvalidKeyLength
 	}
+	if len(req.AuthVerifier) < 32 {
+		return ErrInvalidKeyLength
+	}
+
+	if len(req.IdentityPublicKey) != 32 {
+		return ErrInvalidKeyLength
+	}
+	if len(req.IdentityPrivateKeyNonce) != 24 {
+		return ErrInvalidKeyLength
+	}
+
+	if len(req.VaultPublicKey) != 32 {
+		return ErrInvalidKeyLength
+	}
+	if len(req.VaultPrivateKeyNonce) != 24 {
+		return ErrInvalidKeyLength
+	}
+
 	verifierHash := sha512.Sum512(req.AuthVerifier)
 
 	verifierSlice := verifierHash[:]
 
 	args := db.CreateUserParams{
-		Email:         req.Email,
-		Username:      req.Username,
-		Salt:          req.Salt,
-		AuthVerifier:  verifierSlice,
-		PublicKey:     req.PublicKey,
-		EncPrivateKey: req.EncPrivateKey,
+		Email:    req.Email,
+		Username: req.Username,
+
+		Salt:         req.Salt,
+		AuthVerifier: verifierSlice,
+
+		IdentityPublicKey:       req.IdentityPublicKey,
+		EncIdentityPrivateKey:   req.EncIdentityPrivateKey,
+		IdentityPrivateKeyNonce: req.IdentityPrivateKeyNonce,
+
+		VaultPublicKey:       req.VaultPublicKey,
+		EncVaultPrivateKey:   req.EncVaultPrivateKey,
+		VaultPrivateKeyNonce: req.VaultPrivateKeyNonce,
 	}
 
 	_, err := s.q.CreateUser(ctx, args)
@@ -108,12 +129,19 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (dto.User
 	}
 
 	return dto.User{
-		ID: user.ID,
-		Email: user.Email,
+		ID:       user.ID,
+		Email:    user.Email,
 		Username: user.Username,
-		Salt: user.Salt,
+
+		Salt:         user.Salt,
 		AuthVerifier: user.AuthVerifier,
-		PublicKey: user.PublicKey,
-		EncPrivateKey: user.EncPrivateKey,
+
+		IdentityPublicKey:       user.IdentityPublicKey,
+		EncIdentityPrivateKey:   user.EncIdentityPrivateKey,
+		IdentityPrivateKeyNonce: user.IdentityPrivateKeyNonce,
+
+		VaultPublicKey:       user.VaultPublicKey,
+		EncVaultPrivateKey:   user.EncVaultPrivateKey,
+		VaultPrivateKeyNonce: user.VaultPrivateKeyNonce,
 	}, token, err
 }

@@ -6,8 +6,13 @@ CREATE TABLE users (
     salt BYTEA NOT NULL,
     auth_verifier BYTEA NOT NULL,
 
-    public_key BYTEA NOT NULL,
-    enc_private_key BYTEA NOT NULL,
+    identity_public_key BYTEA NOT NULL,
+    enc_identity_private_key BYTEA NOT NULL,
+    identity_private_key_nonce BYTEA NOT NULL,
+
+    vault_public_key BYTEA NOT NULL,
+    enc_vault_private_key BYTEA NOT NULL,
+    vault_private_key_nonce BYTEA NOT NULL,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
