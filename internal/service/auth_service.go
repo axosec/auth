@@ -58,14 +58,15 @@ func (s *AuthService) RegisterUser(ctx context.Context, req dto.RegisterRequest)
 
 	verifierHash := sha512.Sum512(req.AuthVerifier)
 
-	verifierSlice := verifierHash[:]
+	emailHash := sha512.Sum512([]byte(req.Email))
 
 	args := db.CreateUserParams{
-		Email:    req.Email,
-		Username: req.Username,
+		Email:     req.Email,
+		EmailHash: emailHash[:],
+		Username:  req.Username,
 
 		Salt:         req.Salt,
-		AuthVerifier: verifierSlice,
+		AuthVerifier: verifierHash[:],
 
 		IdentityPublicKey:       req.IdentityPublicKey,
 		EncIdentityPrivateKey:   req.EncIdentityPrivateKey,
@@ -129,9 +130,10 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (dto.User
 	}
 
 	return dto.User{
-		ID:       user.ID,
-		Email:    user.Email,
-		Username: user.Username,
+		ID:        user.ID,
+		Email:     user.Email,
+		EmailHash: user.EmailHash,
+		Username:  user.Username,
 
 		Salt:         user.Salt,
 		AuthVerifier: user.AuthVerifier,

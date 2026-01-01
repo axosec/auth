@@ -1,6 +1,7 @@
 -- name: CreateUser :one
 INSERT INTO users (
     email,
+    email_hash,
     username,
 
     salt,
@@ -14,9 +15,10 @@ INSERT INTO users (
     enc_vault_private_key,
     vault_private_key_nonce
 ) VALUES (
-    $1, $2, $3, $4, 
-    $5, $6, $7, 
-    $8, $9, $10
+    $1, $2, $3,
+    $4, $5,
+    $6, $7, $8,
+    $9, $10, $11
 )
 RETURNING *;
 
@@ -31,3 +33,11 @@ WHERE email = $1 LIMIT 1;
 -- name: GetSaltByEmail :one
 SELECT salt FROM users
 WHERE email = $1 LIMIT 1;
+
+-- name: LookupUser :one
+SELECT id, username, identity_public_key, vault_public_key FROM users
+WHERE email_hash = $1 LIMIT 1;
+
+-- name: LookupUsers :many
+SELECT id, username, identity_public_key, vault_public_key FROM users
+WHERE id = ANY($1::uuid[]);

@@ -3,7 +3,7 @@ module github.com/axosec/auth
 go 1.25.4
 
 require (
-	github.com/axosec/core v0.6.0
+	github.com/axosec/core v0.7.0
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.28.0

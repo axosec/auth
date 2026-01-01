@@ -15,6 +15,8 @@ type Querier interface {
 	GetSaltByEmail(ctx context.Context, email string) ([]byte, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
+	LookupUser(ctx context.Context, emailHash []byte) (LookupUserRow, error)
+	LookupUsers(ctx context.Context, dollar_1 []uuid.UUID) ([]LookupUsersRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

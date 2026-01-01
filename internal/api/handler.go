@@ -45,6 +45,9 @@ func (h *Handler) RegisterRouters(e *gin.Engine) {
 		{
 			authenticated.GET("/user/self", h.GetSelfHandler)
 			authenticated.POST("/user/logout", h.LogoutHandler)
+
+			authenticated.POST("/user/lookup", h.LookupUserHandler)
+			authenticated.POST("/users/lookup", h.LookupUsersHandler)
 		}
 	}
 }

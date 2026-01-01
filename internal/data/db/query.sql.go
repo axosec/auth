@@ -14,6 +14,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     email,
+    email_hash,
     username,
 
     salt,
@@ -27,15 +28,17 @@ INSERT INTO users (
     enc_vault_private_key,
     vault_private_key_nonce
 ) VALUES (
-    $1, $2, $3, $4, 
-    $5, $6, $7, 
-    $8, $9, $10
+    $1, $2, $3,
+    $4, $5, 
+    $6, $7, $8, 
+    $9, $10, $11
 )
-RETURNING id, email, username, salt, auth_verifier, identity_public_key, enc_identity_private_key, identity_private_key_nonce, vault_public_key, enc_vault_private_key, vault_private_key_nonce, created_at, updated_at
+RETURNING id, email, email_hash, username, salt, auth_verifier, identity_public_key, enc_identity_private_key, identity_private_key_nonce, vault_public_key, enc_vault_private_key, vault_private_key_nonce, created_at, updated_at
 `
 
 type CreateUserParams struct {
 	Email                   string
+	EmailHash               []byte
 	Username                string
 	Salt                    []byte
 	AuthVerifier            []byte
@@ -50,6 +53,7 @@ type CreateUserParams struct {
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.Email,
+		arg.EmailHash,
 		arg.Username,
 		arg.Salt,
 		arg.AuthVerifier,
@@ -64,6 +68,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.EmailHash,
 		&i.Username,
 		&i.Salt,
 		&i.AuthVerifier,
@@ -92,7 +97,7 @@ func (q *Queries) GetSaltByEmail(ctx context.Context, email string) ([]byte, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, username, salt, auth_verifier, identity_public_key, enc_identity_private_key, identity_private_key_nonce, vault_public_key, enc_vault_private_key, vault_private_key_nonce, created_at, updated_at FROM users
+SELECT id, email, email_hash, username, salt, auth_verifier, identity_public_key, enc_identity_private_key, identity_private_key_nonce, vault_public_key, enc_vault_private_key, vault_private_key_nonce, created_at, updated_at FROM users
 WHERE email = $1 LIMIT 1
 `
 
@@ -102,6 +107,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.EmailHash,
 		&i.Username,
 		&i.Salt,
 		&i.AuthVerifier,
@@ -118,7 +124,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, email, username, salt, auth_verifier, identity_public_key, enc_identity_private_key, identity_private_key_nonce, vault_public_key, enc_vault_private_key, vault_private_key_nonce, created_at, updated_at FROM users
+SELECT id, email, email_hash, username, salt, auth_verifier, identity_public_key, enc_identity_private_key, identity_private_key_nonce, vault_public_key, enc_vault_private_key, vault_private_key_nonce, created_at, updated_at FROM users
 WHERE id = $1 LIMIT 1
 `
 
@@ -128,6 +134,7 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
+		&i.EmailHash,
 		&i.Username,
 		&i.Salt,
 		&i.AuthVerifier,
@@ -141,4 +148,65 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const lookupUser = `-- name: LookupUser :one
+SELECT id, username, identity_public_key, vault_public_key FROM users
+WHERE email_hash = $1 LIMIT 1
+`
+
+type LookupUserRow struct {
+	ID                uuid.UUID
+	Username          string
+	IdentityPublicKey []byte
+	VaultPublicKey    []byte
+}
+
+func (q *Queries) LookupUser(ctx context.Context, emailHash []byte) (LookupUserRow, error) {
+	row := q.db.QueryRow(ctx, lookupUser, emailHash)
+	var i LookupUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.IdentityPublicKey,
+		&i.VaultPublicKey,
+	)
+	return i, err
+}
+
+const lookupUsers = `-- name: LookupUsers :many
+SELECT id, username, identity_public_key, vault_public_key FROM users
+WHERE id = ANY($1::uuid[])
+`
+
+type LookupUsersRow struct {
+	ID                uuid.UUID
+	Username          string
+	IdentityPublicKey []byte
+	VaultPublicKey    []byte
+}
+
+func (q *Queries) LookupUsers(ctx context.Context, dollar_1 []uuid.UUID) ([]LookupUsersRow, error) {
+	rows, err := q.db.Query(ctx, lookupUsers, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []LookupUsersRow
+	for rows.Next() {
+		var i LookupUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.IdentityPublicKey,
+			&i.VaultPublicKey,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
